@@ -81,7 +81,9 @@ VariablesToExport = '*'
 AliasesToExport = @()
 
 # DSC resources to export from this module
-# DscResourcesToExport = @()
+DscResourcesToExport = @(
+    'AddVSComponents'
+)
 
 # List of all modules packaged with this module
 # ModuleList = @()
@@ -95,7 +97,7 @@ PrivateData = @{
     PSData = @{
 
         # Tags applied to this module. These help with module discovery in online galleries.
-        # Tags = @()
+        Tags = @('PSDscResource_AddVSComponents')
 
         # A URL to the license for this module.
         LicenseUri = 'https://github.com/microsoft/VisualStudioDSC/blob/main/LICENSE'
