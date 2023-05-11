@@ -15,8 +15,17 @@ class AddVSComponents
     [DscProperty(Key)]
     [string]$channelId
 
-    [DscProperty(Mandatory)]
+    [DscProperty()]
+    [string[]]$components
+
+    [DscProperty()]
     [string]$vsConfigFile
+
+    [DscProperty()]
+    [bool]$includeRecommended = $false
+
+    [DscProperty()]
+    [bool]$includeOptional = $false
 
     [DscProperty(NotConfigurable)]
     [string[]]$installedComponents
@@ -28,17 +37,30 @@ class AddVSComponents
         return @{
             productId = $this.productId
             channelId = $this.channelId
+            components = $this.components
             vsConfigFile = $this.vsConfigFile
+            includeRecommended = $this.includeRecommended
+            includeOptional = $this.includeOptional
             installedComponents = $this.installedComponents
         }
     }
 
     [bool] Test()
     {
-        $this.Get()
-        $components = Get-Content $this.vsConfigFile | Out-String | ConvertFrom-Json | Select-Object -ExpandProperty components
+        if(-not $this.components -and -not $this.vsConfigFile)
+        {
+            throw "No components specified to be added. Specify either an Installation Configuration (VSConfig) file, individual required components, or both."
+        }
 
-        foreach ($component in $components)
+        $this.Get()
+        $requestedComponents = $this.components
+
+        if($this.vsConfigFile)
+        {
+            $requestedComponents += Get-Content $this.vsConfigFile | Out-String | ConvertFrom-Json | Select-Object -ExpandProperty components
+        }
+
+        foreach ($component in $requestedComponents)
         {
             if ($this.installedComponents -notcontains $component)
             {
@@ -56,7 +78,7 @@ class AddVSComponents
             return
         }
 
-        Install-VsConfigFile -ProductId $this.productId -ChannelId $this.channelId -VsConfigPath $this.vsConfigFile
+        Add-VsComponents -ProductId $this.productId -ChannelId $this.channelId -VsConfigPath $this.vsConfigFile -Components $this.components -IncludeRecommended $this.includeRecommended -IncludeOptional $this.includeOptional
     }
 }
 
@@ -93,7 +115,7 @@ function Get-VsComponents
 
 <#
 .SYNOPSIS
-    Installs components and workloads identified by the provided Installation Configuration (VSConfig) file
+    Adds components and workloads identified by the provided component list & Installation Configuration (VSConfig) file into the specified instance
 
 .PARAMETER ProductId
     The product identifier of the instance you are working with. EG: 'Microsoft.VisualStudio.Product.Community'
@@ -101,8 +123,17 @@ function Get-VsComponents
 .PARAMETER ChannelId
     The channel identifier of the instance you are working with. EG: 'VisualStudio.17.Release'
 
+.PARAMETER Components
+    Collection of component identifiers you wish to update the provided instance with.
+
 .PARAMETER VsConfigPath
     Path to the Installation Configuration (VSConfig) file you wish to update the provided instance with.
+
+.PARAMETER IncludeRecommended
+    For the provided required components, also add recommended components into the specified instance
+
+.PARAMETER IncludeOptional
+    For the provided required components, also add optional components into the specified instance
 
 .LINK
     https://learn.microsoft.com/en-us/visualstudio/install/workload-and-component-ids
@@ -111,9 +142,12 @@ function Get-VsComponents
     https://learn.microsoft.com/en-us/visualstudio/install/command-line-parameter-examples#using---channelId
 
 .LINK
+    https://learn.microsoft.com/en-us/visualstudio/install/use-command-line-parameters-to-install-visual-studio#install-update-modify-repair-uninstall-and-export-commands-and-command-line-parameters
+
+.LINK
     https://devblogs.microsoft.com/setup/configure-visual-studio-across-your-organization-with-vsconfig/
 #>
-function Install-VsConfigFile
+function Add-VsComponents
 {
     param
     (
@@ -122,17 +156,54 @@ function Install-VsConfigFile
 
         [Parameter(Mandatory)]
         [string]$ChannelId,
+        
+        [Parameter()]
+        [string[]]$Components,
 
-        [Parameter(Mandatory)]
-        [string]$VsConfigPath
+        [Parameter()]
+        [string]$VsConfigPath,
+
+        [Parameter()]
+        [bool]$IncludeRecommended,
+        
+        [Parameter()]
+        [bool]$IncludeOptional
     )
     
-    if(-not (Test-Path $VsConfigPath))
+    $installerArgs = "modify --productId $ProductId --channelId $ChannelId --quiet --norestart --noupdateinstaller"
+
+    if(-not $Components -and -not $VsConfigPath)
     {
-        throw "Provided Installation Configuration file does not exist at $VsConfigPath"
+        throw "No components specified to be added. Specify either an Installation Configuration (VSConfig) file, individual required components, or both."
     }
 
-    Invoke-VsInstaller -Arguments "modify --productId $ProductId --channelId $ChannelId --config $VsConfigPath --quiet --norestart --noupdateinstaller"
+    if($VsConfigPath)
+    {
+        if(-not (Test-Path $VsConfigPath))
+        {
+            throw "Provided Installation Configuration file does not exist at $VsConfigPath"
+        }
+
+        $installerArgs += " --config $VsConfigPath"
+    }
+
+    if($Components)
+    {
+        $installerArgs += " --add " + ($Components -join ' --add ');
+    }
+
+    if($IncludeRecommended)
+    {
+        $installerArgs += " --includeRecommended"
+    }
+
+    
+    if($IncludeOptional)
+    {
+        $installerArgs += " --includeOptional"
+    }
+
+    Invoke-VsInstaller -Arguments $installerArgs
 }
 
 <#
