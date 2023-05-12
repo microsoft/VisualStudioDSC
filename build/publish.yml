@@ -1,0 +1,53 @@
+stages:
+ - stage: 'Publish'
+   dependsOn: 'Build'
+   condition: and(succeeded(), eq(variables.IsMainBranch, true))
+   jobs:
+    - job: 'Publish'
+      displayName: 'Publish to Powershell Gallery'
+      pool: '$(MicroBuildPool)'
+
+      variables:
+        - group: 'VSSetup secrets'
+
+      steps:
+      - checkout: none  
+
+      - download: current
+        artifact: dropModule
+
+      - pwsh: |
+          $isPreRelease = -not [string]::IsNullOrEmpty((Test-ModuleManifest -Path $(Pipeline.Workspace)\dropModule\Microsoft.VisualStudio.DSC\Microsoft.VisualStudio.DSC.psd1).PrivateData.PSData.Prerelease)
+          Write-Host "##vso[task.setvariable variable=isPublishPreRelease;]$isPreRelease"
+        displayName: 'Determining if module is Pre Release'
+
+      - pwsh: |
+          $publishModuleParams = @{
+              Path = "$(Pipeline.Workspace)\dropModule\Microsoft.VisualStudio.DSC"
+              NuGetApiKey = "$(VSSetup-Powershell-API-Key)"
+              Verbose = $true
+              Force = $true
+          }
+
+          Publish-Module @publishModuleParams
+        displayName: 'Upload module to PowerShell Gallery'
+
+      - pwsh: |
+          $nupkgPath = Get-ChildItem -Include *.nupkg -Recurse -Path $env:Tmp\*\Microsoft.VisualStudio.DSC
+
+          Copy-Item $nupkgPath $(Build.ArtifactStagingDirectory)
+
+        displayName: 'Moving published Nupkg to Artifact Staging'
+
+      - task: GitHubRelease@1
+        displayName: 'Publish Release on GitHub'
+        inputs:
+          gitHubConnection: 'GitHub-Preecington'
+          repositoryName: 'Microsoft/VisualStudioDSC'
+          target: '$(Build.SourceVersion)'
+          tagSource: userSpecifiedTag
+          tag: '$(Build.BuildNumber)'
+          assets: '$(Build.ArtifactStagingDirectory)\*.nupkg'
+          isPreRelease: $(isPublishPreRelease)
+
+

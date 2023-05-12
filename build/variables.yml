@@ -19,6 +19,6 @@ variables:
 
   - name: 'SignType'
     ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
-      value: 'test'
+      value: 'real'
     ${{ if ne(variables['Build.SourceBranch'], 'refs/heads/main') }}:
       value: 'test'
