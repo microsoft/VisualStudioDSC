@@ -12,7 +12,7 @@
 RootModule = 'Microsoft.VisualStudio.DSC.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.0.0'
+ModuleVersion = '0.0.0'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -33,7 +33,7 @@ Copyright = '(c) Microsoft Corporation. All rights reserved.'
 Description = 'DSC resources to simplify state management of installed Visual Studio instances'
 
 # Minimum version of the PowerShell engine required by this module
-# PowerShellVersion = ''
+PowerShellVersion = '5.1'
 
 # Name of the PowerShell host required by this module
 # PowerShellHostName = ''
@@ -72,13 +72,15 @@ Description = 'DSC resources to simplify state management of installed Visual St
 FunctionsToExport = @()
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
-CmdletsToExport = @()
+# Commented out due to https://github.com/PowerShell/PowerShell/issues/12054#issuecomment-1253925630
+#CmdletsToExport = @() 
 
 # Variables to export from this module
 VariablesToExport = '*'
 
 # Aliases to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no aliases to export.
-AliasesToExport = @()
+# Commented out due to https://github.com/PowerShell/PowerShell/issues/12054#issuecomment-1253925630
+#AliasesToExport = @()
 
 # DSC resources to export from this module
 DscResourcesToExport = @(
