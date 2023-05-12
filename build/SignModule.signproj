@@ -1,4 +1,4 @@
-<Project ToolsVersion="Current" Sdk="Microsoft.Build.NoTargets/3.7.0">
+<Project ToolsVersion="Current" Sdk="Microsoft.Build.NoTargets">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <OutputPath>$(ModuleFolder)</OutputPath>
@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core"/>
+    <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="1.0.0" />
   </ItemGroup>
 
   <Target Name="_GetFilesToSign"

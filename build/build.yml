@@ -1,5 +1,5 @@
 stages:
- - stage: 'build.yml'
+ - stage: 'Build'
    jobs:
     - job: 'Build'
       displayName: 'Build & Sign DSC Module'
@@ -13,15 +13,21 @@ stages:
           displayName: 'Install Nerdbank GitVersioning (nbgv)'
 
         - pwsh: |
-            .\nbgv cloud
+            .\nbgv cloud --all-vars --common-vars
           displayName: 'Determine Version'
 
         - pwsh: |
-            $moduleFilePath = "$(ModuleSourceFolder)\Microsoft.VisualStudio.DSC.psd1"
-            Update-ModuleManifest -Path $moduleFilePath -ModuleVersion "$(GitBuildVersion)"
+            $updateModuleParams = @{
+                  Path = "$(ModuleSourceFolder)\Microsoft.VisualStudio.DSC.psd1"
+                  ModuleVersion = "$(GitBuildVersionSimple)"
+                  Prerelease = "$(NBGV_PrereleaseVersionNoLeadingHyphen)"
+                  IconUri = "https://go.microsoft.com/fwlink/?linkid=839265"
+                  LicenseUri = "https://github.com/microsoft/VisualStudioDSC/blob/$(Build.SourceVersion)/LICENSE"
+                  ProjectUri = "https://github.com/microsoft/VisualStudioDSC"
+                  ReleaseNotes = "https://github.com/Microsoft/VisualStudioDSC/releases/tag/$(Build.BuildNumber)"
+              }
 
-            #Debug - remove later
-            cat $moduleFilePath
+            Update-ModuleManifest @updateModuleParams
           displayName: 'Update Module Version'
 
         - task: MicroBuildSigningPlugin@4
@@ -50,6 +56,8 @@ stages:
             Test-FileCatalog @testFileCatalogParams
           displayName: 'Create and test catalog file'
 
+        - task: NuGetAuthenticate@1
+
         - task: MSBuild@1
           inputs:
             solution: '$(ModuleBuildFolder)\SignModule.signproj'
@@ -59,6 +67,16 @@ stages:
           inputs:
             TargetFolders: '$(ModuleSourceFolder)'
           displayName: 'Verify signature'
+
+        - task: CopyFiles@2
+          displayName: 'Copying module to Artifact Staging'
+          inputs:
+            contents: $(ModuleSourceFolder)\**
+            targetFolder: '$(Build.ArtifactStagingDirectory)\dropModule'
+
+        - publish: '$(Build.ArtifactStagingDirectory)\dropModule'
+          displayName: 'Publish module artifact'
+          artifact: dropModule
 
         - task: MicroBuildCleanup@1
           env:
