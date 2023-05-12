@@ -1,0 +1,24 @@
+variables:
+  - name: 'TeamName'
+    value: 'VSSetup'
+
+  - name: 'MicroBuildPool'
+    value: 'VSEngSS-MicroBuild2022-1ES'
+
+  - name: 'ModuleFolder'
+    value: '$(Build.SourcesDirectory)'
+
+  - name: 'ModuleSourceFolder'
+    value: '$(ModuleFolder)\Microsoft.VisualStudio.DSC'
+
+  - name: 'ModuleBuildFolder'
+    value: '$(ModuleFolder)\build'
+
+  - name: 'IsMainBranch'
+    value: $[eq(variables['Build.SourceBranch'], 'refs/heads/main')]
+
+  - name: 'SignType'
+    ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
+      value: 'test'
+    ${{ if ne(variables['Build.SourceBranch'], 'refs/heads/main') }}:
+      value: 'test'

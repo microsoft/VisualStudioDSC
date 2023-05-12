@@ -1,0 +1,22 @@
+<Project ToolsVersion="Current" Sdk="Microsoft.Build.NoTargets/3.7.0">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <OutputPath>$(ModuleFolder)</OutputPath>
+    <GenerateDependencyFile>false</GenerateDependencyFile>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core"/>
+  </ItemGroup>
+
+  <Target Name="_GetFilesToSign"
+          BeforeTargets="SignFiles">
+
+    <ItemGroup>
+      <FilesToSign Include="$(OutputPath)\catalog.cat" Authenticode="Microsoft400" />
+      <FilesToSign Include="$(OutputPath)\*.ps*1" Authenticode="Microsoft400" />
+    </ItemGroup>
+  </Target>
+
+</Project>

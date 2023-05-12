@@ -1,0 +1,66 @@
+stages:
+ - stage: 'build.yml'
+   jobs:
+    - job: 'Build'
+      displayName: 'Build & Sign DSC Module'
+      pool: '$(MicroBuildPool)'
+      steps:
+        - checkout: self
+          fetchDepth: 0
+
+        - pwsh: |
+            dotnet tool install nbgv --tool-path "."
+          displayName: 'Install Nerdbank GitVersioning (nbgv)'
+
+        - pwsh: |
+            .\nbgv cloud
+          displayName: 'Determine Version'
+
+        - pwsh: |
+            $moduleFilePath = "$(ModuleSourceFolder)\Microsoft.VisualStudio.DSC.psd1"
+            Update-ModuleManifest -Path $moduleFilePath -ModuleVersion "$(GitBuildVersion)"
+
+            #Debug - remove later
+            cat $moduleFilePath
+          displayName: 'Update Module Version'
+
+        - task: MicroBuildSigningPlugin@4
+          inputs:
+            signType: '$(SignType)'
+            feedSource: 'https://pkgs.dev.azure.com/devdiv/_packaging/MicroBuildToolset/nuget/v3/index.json'
+          env:
+            TeamName: '$(TeamName)'
+
+        - pwsh: |
+            $catalogFiles = Get-ChildItem $(ModuleSourceFolder) -Recurse -File
+            $catalogFile = "$(ModuleSourceFolder)\catalog.cat"
+
+            $newFileCatalogParams = @{
+              Path = $catalogFiles
+              CatalogFilePath = $catalogFile
+              CatalogVersion = 2.0
+            }
+            New-FileCatalog @newFileCatalogParams
+
+            $testFileCatalogParams = @{
+              Path = $catalogFiles
+              CatalogFilePath = $catalogFile
+              Detailed = $true
+            }
+            Test-FileCatalog @testFileCatalogParams
+          displayName: 'Create and test catalog file'
+
+        - task: MSBuild@1
+          inputs:
+            solution: '$(ModuleBuildFolder)\SignModule.signproj'
+            msbuildArguments: '/r /p:ModuleFolder="$(ModuleSourceFolder)"'
+
+        - task: MicroBuildCodesignVerify@3
+          inputs:
+            TargetFolders: '$(ModuleSourceFolder)'
+          displayName: 'Verify signature'
+
+        - task: MicroBuildCleanup@1
+          env:
+            TeamName: '$(TeamName)'
+          displayName: 'Clean up signing tools'
