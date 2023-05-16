@@ -28,6 +28,12 @@ stages:
               }
 
             Update-ModuleManifest @updateModuleParams
+
+            # Work around Update-ModuleManifest adding back in commented out manifest lines
+            # See: https://github.com/PowerShell/PowerShell/issues/12054#issuecomment-1253925630
+            (Get-Content -Path $updateModuleParams.Path) | `
+             ForEach-Object {$_ -Replace 'CmdletsTo', '#CmdletsTo' -Replace 'AliasesTo', '#AliasesTo' } | `
+             Set-Content -Path $updateModuleParams.Path
           displayName: 'Update Module Version'
 
         - task: MicroBuildSigningPlugin@4
