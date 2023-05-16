@@ -33,10 +33,9 @@ stages:
         displayName: 'Upload module to PowerShell Gallery'
 
       - pwsh: |
-          $nupkgPath = Get-ChildItem -Include *.nupkg -Recurse -Path "$([System.IO.Path]::GetTempPath())\*\Microsoft.VisualStudio.DSC"
-
-          Copy-Item $nupkgPath $(Build.ArtifactStagingDirectory)
-        displayName: 'Moving published Nupkg to Artifact Staging'
+          iwr https://www.powershellgallery.com/api/v2/package/Microsoft.VisualStudio.DSC/$(Build.BuildNumber) -outfile $(Build.ArtifactStagingDirectory)\Microsoft.VisualStudio.DSC.$(Build.BuildNumber).nupkg
+          
+        displayName: 'Downloading published nupkg to artifact staging'
 
       - task: GitHubRelease@1
         displayName: 'Publish Release on GitHub'
