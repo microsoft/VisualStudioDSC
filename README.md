@@ -2,9 +2,9 @@
 
 DSC resources to simplify state management of installed Visual Studio instances.
 
-## AddVSComponents Resource
+## VSComponents Resource
 
-The `AddVSComponents` resource is used to modify a pre-existing Visual Studio instance state with additional components.
+The `VSComponents` resource is used to modify a pre-existing Visual Studio instance state with additional components.
 
 ### Parameters
 

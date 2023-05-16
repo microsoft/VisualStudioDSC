@@ -7,7 +7,7 @@ using namespace System.Collections.Generic
 using namespace System.Diagnostics
 
 [DSCResource()]
-class AddVSComponents
+class VSComponents
 {
     [DscProperty(Key)]
     [string]$productId
@@ -30,7 +30,7 @@ class AddVSComponents
     [DscProperty(NotConfigurable)]
     [string[]]$installedComponents
 
-    [AddVSComponents] Get()
+    [VSComponents] Get()
     {
         $this.installedComponents = Get-VsComponents -ProductId $this.productId -ChannelId $this.channelId
 
