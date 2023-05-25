@@ -4,7 +4,11 @@ DSC resources to simplify state management of installed Visual Studio instances.
 
 ## VSComponents Resource
 
-The `VSComponents` resource is used to modify a pre-existing Visual Studio instance state with additional components.
+The `VSComponents` resource is used to modify a pre-existing Visual Studio instance in order to add additional [components](https://learn.microsoft.com/visualstudio/install/workload-and-component-ids). It is meant to accompany the [`winget configure`](https://learn.microsoft.com/windows/package-manager/winget/configure) command. 
+
+You currently need administrator permissions to use this resource to install or modify Visual Studio. Furthermore, Visual Studio must be closed in order to update or add components to it. 
+
+Refer to [Use winget to install or modify Visual Studio](https://learn.microsoft.com/en-us/visualstudio/install/use-command-line-parameters-to-install-or-modify-visual-studio?#use-winget-to-install-visual-studio) for additional information. 
 
 ### Parameters
 
