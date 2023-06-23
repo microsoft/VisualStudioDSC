@@ -55,8 +55,13 @@ class VSComponents
         $this.Get()
         $requestedComponents = $this.components
 
-        if($this.vsConfigFile)
+        if ($this.vsConfigFile)
         {
+            if(-not (Test-Path $this.vsConfigFile))
+            {
+                throw "Provided Installation Configuration file does not exist at $($this.vsConfigFile)"
+            }
+
             $requestedComponents += Get-Content $this.vsConfigFile | Out-String | ConvertFrom-Json | Select-Object -ExpandProperty components
         }
 
@@ -184,7 +189,7 @@ function Add-VsComponents
             throw "Provided Installation Configuration file does not exist at $VsConfigPath"
         }
 
-        $installerArgs += " --config $VsConfigPath"
+        $installerArgs += " --config `"$VsConfigPath`""
     }
 
     if($Components)
