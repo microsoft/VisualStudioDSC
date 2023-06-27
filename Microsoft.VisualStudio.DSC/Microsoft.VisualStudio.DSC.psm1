@@ -175,7 +175,7 @@ function Add-VsComponents
         [bool]$IncludeOptional
     )
     
-    $installerArgs = "modify --productId $ProductId --channelId $ChannelId --quiet --norestart --noupdateinstaller"
+    $installerArgs = "modify --productId $ProductId --channelId $ChannelId --quiet --norestart"
 
     if(-not $Components -and -not $VsConfigPath)
     {
@@ -240,6 +240,7 @@ function Invoke-VsInstaller
 
     $installer = Start-Process -FilePath (Get-VsInstallerPath) -ArgumentList $Arguments -PassThru
     $installer.WaitForExit();
+    Wait-Process -name setup;
 
     # See script block description for error code explanation
     $validErrorCodes = 0,3010,862968;
