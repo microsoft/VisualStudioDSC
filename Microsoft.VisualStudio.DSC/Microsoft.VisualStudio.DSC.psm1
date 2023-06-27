@@ -240,6 +240,7 @@ function Invoke-VsInstaller
 
     $installer = Start-Process -FilePath (Get-VsInstallerPath) -ArgumentList $Arguments -PassThru
     $installer.WaitForExit();
+    # Wait for all processes in case there is an installer update
     Wait-Process -name setup;
 
     # See script block description for error code explanation
