@@ -270,18 +270,33 @@ function Invoke-VsInstaller
     $installer = Start-Process -FilePath (Get-VsInstallerPath) -ArgumentList $Arguments -PassThru
     $installer.WaitForExit();
     $basePath = Build-BasePath
-    $activeInstallerProcessIds = Get-Process Setup | Where-Object { $_.Path -like "$basePath*" } | Select-Object -ExpandProperty Id
-
-    if($activeInstallerProcessIds)
-    {
-        Wait-Process -Id $activeInstallerProcessIds -Timeout 3600
-    }
-
-    # See script block description for error code explanation
+    $activeInstallerProcess = Get-Process Setup | Where-Object { $_.Path -like "$basePath*" }
     $validErrorCodes = 0,3010,862968;
-    if($installer.ExitCode -NotIn $validErrorCodes)
+
+    if($activeInstallerProcess)
     {
-        throw "Visual Studio Installer failed with error code $($installer.ExitCode) using arguments: $Arguments"
+        $processIds = $activeInstallerProcess | Select-Object -ExpandProperty Id
+        Wait-Process -Id $processIds -Timeout 3600
+
+        # There was an installer update, check for exit codes of the installer update operation and the user requested operation
+        # No need to check for initial installer process exit code as it should have failed
+        $exitCodes = $processIds | ForEach-Object {
+            $process = Get-Process -Id $_
+
+            # See script block description for error code explanation
+            if($process.ExitCode -and $process.ExitCode -NotIn $validErrorCodes)
+            {
+                throw "Visual Studio Installer failed with error code $($process.ExitCode) using arguments: $Arguments"
+            }
+        }
+    }
+    else
+    {
+        # See script block description for error code explanation
+        if($installer.ExitCode -NotIn $validErrorCodes)
+        {
+            throw "Visual Studio Installer failed with error code $($installer.ExitCode) using arguments: $Arguments"
+        }
     }
 }
 
