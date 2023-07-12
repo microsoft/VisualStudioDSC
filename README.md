@@ -8,7 +8,7 @@ The `VSComponents` resource is used to modify a pre-existing Visual Studio insta
 
 You currently need administrator permissions to use this resource to install or modify Visual Studio. Furthermore, Visual Studio must be closed in order to update or add components to it. 
 
-Refer to [Use winget to install or modify Visual Studio](https://learn.microsoft.com/en-us/visualstudio/install/use-command-line-parameters-to-install-or-modify-visual-studio?#use-winget-to-install-visual-studio) for additional information. 
+Refer to [Use winget to install or modify Visual Studio](https://learn.microsoft.com/visualstudio/install/use-command-line-parameters-to-install-visual-studio?#use-winget-to-install-or-modify-visual-studio) for additional information. 
 
 ### Parameters
 
@@ -16,10 +16,10 @@ At least `VSConfigFile` or `Components` must be specified. You can also specify 
 
 **Parameter**|**Attribute**|**DataType**|**Description**|**Allowed Values**
 :-----|:-----|:-----|:-----|:-----
-`ProductId`|Key|String|The product identifier of the instance you are working with. EG: `Microsoft.VisualStudio.Product.Community`|See [workload and component ids](https://learn.microsoft.com/en-us/visualstudio/install/workload-and-component-ids)
-`ChannelId`|Key|String|The channel identifier of the instance you are working with. EG: `VisualStudio.17.Release`|See [channel identifiers](https://learn.microsoft.com/en-us/visualstudio/install/command-line-parameter-examples#using---channelId)
-`Components`|Optional|StringArray[]|Collection of component identifiers you wish to update the provided instance with.|See [workload and component ids](https://learn.microsoft.com/en-us/visualstudio/install/workload-and-component-ids)
-`VSConfigFile`|Optional|String|Path to the [Installation Configuration (VSConfig) file](https://devblogs.microsoft.com/setup/configure-visual-studio-across-your-organization-with-vsconfig/) you wish to update the provided instance with.|Valid file path to a .vsconfig file
+`ProductId`|Key|String|The product identifier of the instance you are working with. EG: `Microsoft.VisualStudio.Product.Community`|See [workload and component ids](https://learn.microsoft.com/visualstudio/install/workload-and-component-ids)
+`ChannelId`|Key|String|The channel identifier of the instance you are working with. EG: `VisualStudio.17.Release`|See [channel identifiers](https://learn.microsoft.com/visualstudio/install/command-line-parameter-examples#using---channeluri)
+`Components`|Optional|StringArray[]|Collection of component identifiers you wish to update the provided instance with.|See [workload and component ids](https://learn.microsoft.com/visualstudio/install/workload-and-component-ids)
+`VSConfigFile`|Optional|String|Path to the [Installation Configuration (VSConfig) file](https://learn.microsoft.com/visualstudio/install/import-export-installation-configurations)) you wish to update the provided instance with.|Valid file path to a .vsconfig file
 `IncludeRecommended`|Optional|Boolean|For the provided required components, also add recommended components into the specified instance|True/False
 `IncludeOptional`|Optional|Boolean|For the provided required components, also add optional components into the specified instance|True/False
 `InstalledComponents`|NotConfigurable|StringArray[]|A collection of components installed in the Visual Studio instance identified by the provided Product ID and Channel ID.|N/A
