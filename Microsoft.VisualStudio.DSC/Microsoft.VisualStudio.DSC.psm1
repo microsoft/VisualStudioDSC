@@ -55,7 +55,7 @@ class VSComponents
         $this.Get()
         $requestedComponents = $this.components
 
-        if ($this.vsConfigFile)
+        if($this.vsConfigFile)
         {
             if(-not (Test-Path $this.vsConfigFile))
             {
@@ -67,7 +67,7 @@ class VSComponents
 
         foreach ($component in $requestedComponents)
         {
-            if ($this.installedComponents -notcontains $component)
+            if($this.installedComponents -notcontains $component)
             {
                 return $false
             }
@@ -175,7 +175,7 @@ function Add-VsComponents
         [bool]$IncludeOptional
     )
     
-    $installerArgs = "modify --productId $ProductId --channelId $ChannelId --quiet --norestart --noupdateinstaller"
+    $installerArgs = "modify --productId $ProductId --channelId $ChannelId --quiet --norestart"
 
     if(-not $Components -and -not $VsConfigPath)
     {
@@ -213,6 +213,35 @@ function Add-VsComponents
 
 <#
 .SYNOPSIS
+    Builds a base path, if it exists, with the provided argument.
+
+.DESCRIPTION
+    Builds a base path with the provided argument.
+    This is used to build a base path for process ids of setup.exe or vswhere.exe.
+
+.PARAMETER Arguments
+    Arguments to build a base path with
+#>
+function Build-BasePath
+{
+    param
+    (
+        [Parameter()]
+        [string]$ExePath
+    )
+
+    $basePath = Join-Path -Path "${env:ProgramFiles(x86)}" -ChildPath "Microsoft Visual Studio"
+
+    if($ExePath)
+    {
+        return Join-Path -Path $basePath -ChildPath $ExePath
+    }
+
+    return $basePath
+}
+
+<#
+.SYNOPSIS
     Invokes Visual Studio Installer, if it exists, with the provided arguments.
 
 .DESCRIPTION
@@ -240,12 +269,31 @@ function Invoke-VsInstaller
 
     $installer = Start-Process -FilePath (Get-VsInstallerPath) -ArgumentList $Arguments -PassThru
     $installer.WaitForExit();
-
+    $basePath = Build-BasePath
+    # Set EnableRaisingEvents to true to access the Exit Code later
+    $activeInstallerProcess = Get-Process Setup | Where-Object { $_.Path -like "$basePath*" } | ForEach-Object { $_.EnableRaisingEvents = $true }
     # See script block description for error code explanation
     $validErrorCodes = 0,3010,862968;
-    if($installer.ExitCode -NotIn $validErrorCodes)
+    
+    if($activeInstallerProcess)
     {
-        throw "Visual Studio Installer failed with error code $($installer.ExitCode) using arguments: $Arguments"
+        $processIds = $activeInstallerProcess | Select-Object -ExpandProperty Id
+        Wait-Process -Id $processIds -Timeout 3600
+
+        foreach($process in $activeInstallerProcess) 
+        {
+            if($process.ExitCode -NotIn $validErrorCodes)
+            {
+                throw "Visual Studio Installer failed after installer update with error code $($process.ExitCode) using arguments: $Arguments"
+            }
+        }
+    }
+    else
+    {
+        if($installer.ExitCode -NotIn $validErrorCodes)
+        {
+            throw "Visual Studio Installer failed with error code $($installer.ExitCode) using arguments: $Arguments"
+        }
     }
 }
 
@@ -282,7 +330,7 @@ function Invoke-VsWhere
 #>
 function Assert-IsAdministrator
 {
-    if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))
+    if(-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))
     {
         throw "This resource must be run as an Administrator."
     }
@@ -294,7 +342,7 @@ function Assert-IsAdministrator
 #>
 function Get-VsInstallerPath
 {
-    return Join-Path -Path "${env:ProgramFiles(x86)}" -ChildPath "Microsoft Visual Studio\Installer\setup.exe"
+    return Build-BasePath -ExePath "Installer\setup.exe"
 }
 
 <#
@@ -303,7 +351,7 @@ function Get-VsInstallerPath
 #>
 function Get-VsWherePath
 {
-    return Join-Path -Path "${env:ProgramFiles(x86)}" -ChildPath "Microsoft Visual Studio\Installer\vswhere.exe"
+    return Build-BasePath -ExePath "Installer\vswhere.exe"
 }
 
 <#
@@ -336,7 +384,7 @@ function Assert-VsWherePresent
 #>
 function Assert-VsInstallerProcessNotRunning
 {
-    if (Get-Process | Where-Object { $_.Path -eq (Get-VsInstallerPath) })
+    if(Get-Process | Where-Object { $_.Path -eq (Get-VsInstallerPath) })
     {
         throw "Visual Studio Installer is running. Close the installer and try again."
     }
