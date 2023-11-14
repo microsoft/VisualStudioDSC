@@ -27,6 +27,9 @@ class VSComponents
     [DscProperty()]
     [bool]$includeOptional = $false
 
+    [DscProperty()]
+    [bool]$allowUnsignedExtensions = $false
+
     [DscProperty(NotConfigurable)]
     [string[]]$installedComponents
 
@@ -41,6 +44,7 @@ class VSComponents
             vsConfigFile = $this.vsConfigFile
             includeRecommended = $this.includeRecommended
             includeOptional = $this.includeOptional
+            allowUnsignedExtensions = $this.allowUnsignedExtensions
             installedComponents = $this.installedComponents
         }
     }
@@ -83,7 +87,7 @@ class VSComponents
             return
         }
 
-        Add-VsComponents -ProductId $this.productId -ChannelId $this.channelId -VsConfigPath $this.vsConfigFile -Components $this.components -IncludeRecommended $this.includeRecommended -IncludeOptional $this.includeOptional
+        Add-VsComponents -ProductId $this.productId -ChannelId $this.channelId -VsConfigPath $this.vsConfigFile -Components $this.components -IncludeRecommended $this.includeRecommended -IncludeOptional $this.includeOptional -AllowUnsignedExtensions $this.allowUnsignedExtensions
     }
 }
 
@@ -140,6 +144,9 @@ function Get-VsComponents
 .PARAMETER IncludeOptional
     For the provided required components, also add optional components into the specified instance
 
+.PARAMETER AllowUnsignedExtensions
+    For the provided extensions, allow unsigned extensions to be installed into the specified instance
+    
 .LINK
     https://learn.microsoft.com/en-us/visualstudio/install/workload-and-component-ids
 
@@ -173,6 +180,9 @@ function Add-VsComponents
         
         [Parameter()]
         [bool]$IncludeOptional
+        
+        [Parameter()]
+        [bool]$AllowUnsignedExtensions
     )
     
     $installerArgs = "modify --productId $ProductId --channelId $ChannelId --quiet --norestart"
@@ -206,6 +216,11 @@ function Add-VsComponents
     if($IncludeOptional)
     {
         $installerArgs += " --includeOptional"
+    }
+
+    if($AllowUnsignedExtensions)
+    {
+        $installerArgs += " --allowUnsignedExtensions"
     }
 
     Invoke-VsInstaller -Arguments $installerArgs
