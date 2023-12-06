@@ -179,7 +179,7 @@ function Add-VsComponents
         [bool]$IncludeRecommended,
         
         [Parameter()]
-        [bool]$IncludeOptional
+        [bool]$IncludeOptional,
         
         [Parameter()]
         [bool]$AllowUnsignedExtensions
