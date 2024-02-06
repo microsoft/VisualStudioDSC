@@ -4,6 +4,19 @@ stages:
     - job: 'Build'
       displayName: 'Build & Sign DSC Module'
       pool: '$(MicroBuildPool)'
+      templateContext:
+        mb:
+          signing:
+            enabled: true
+            signType: $(SignType)
+            zipSources: false
+
+        outputs:
+          - output: pipelineArtifact
+            targetPath: '$(Build.ArtifactStagingDirectory)\dropModule'
+            displayName: 'Publish module artifact'
+            artifactName: dropModule
+
       steps:
         - checkout: self
           fetchDepth: 0
@@ -35,13 +48,6 @@ stages:
              ForEach-Object {$_ -Replace 'CmdletsTo', '#CmdletsTo' -Replace 'AliasesTo', '#AliasesTo' } | `
              Set-Content -Path $updateModuleParams.Path
           displayName: 'Update Module Version'
-
-        - task: MicroBuildSigningPlugin@4
-          inputs:
-            signType: '$(SignType)'
-            feedSource: 'https://pkgs.dev.azure.com/devdiv/_packaging/MicroBuildToolset/nuget/v3/index.json'
-          env:
-            TeamName: '$(TeamName)'
 
         - pwsh: |
             $catalogFiles = Get-ChildItem $(ModuleSourceFolder) -Recurse -File
@@ -79,10 +85,6 @@ stages:
           inputs:
             contents: $(ModuleSourceFolder)\**
             targetFolder: '$(Build.ArtifactStagingDirectory)\dropModule'
-
-        - publish: '$(Build.ArtifactStagingDirectory)\dropModule'
-          displayName: 'Publish module artifact'
-          artifact: dropModule
 
         - task: MicroBuildCleanup@1
           env:

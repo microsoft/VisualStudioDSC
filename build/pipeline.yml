@@ -15,6 +15,25 @@ pr: none
 variables:
   - template: 'variables.yml'
 
-stages:
-  - template: 'build.yml'
-  - template: 'publish.yml'
+resources:
+  repositories:
+    - repository: MicroBuildTemplate
+      type: git
+      name: 1ESPipelineTemplates/MicroBuildTemplate
+      ref: refs/tags/release
+
+extends:
+  template: azure-pipelines/MicroBuild.1ES.Official.yml@MicroBuildTemplate
+  parameters:
+    pool:
+      name: VSEngSS-MicroBuild2022-1ES
+    sdl:
+      policheck:
+        enabled: true
+      binskim:
+        enabled: true
+        scanOutputDirectoryOnly: true
+
+    stages:
+      - template: 'build.yml'
+      - template: 'publish.yml'
