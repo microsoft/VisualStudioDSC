@@ -13,12 +13,3 @@ variables:
 
   - name: 'ModuleBuildFolder'
     value: '$(ModuleFolder)\build'
-
-  - name: 'IsMainBranch'
-    value: $[eq(variables['Build.SourceBranch'], 'refs/heads/main')]
-
-  - name: 'SignType'
-    ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
-      value: 'real'
-    ${{ if ne(variables['Build.SourceBranch'], 'refs/heads/main') }}:
-      value: 'test'
