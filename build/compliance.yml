@@ -1,28 +1,21 @@
 # Copyright (C) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT license. See LICENSE.txt in the project root for license information.
 
-trigger:
-  batch: true
+trigger: none
+pr: none
+schedules:
+- cron: "0 12 * * 1"
+  displayName: 'Run every Monday at 12:00 p.m.'
   branches:
     include:
-    - main
-  paths:
-    exclude:
-    - '*.md'
-
-pr: none
+      - main
+  always: true
 
 variables:
   - template: 'variables.yml'
-  
-  - name: 'IsMainBranch'
-    value: $[eq(variables['Build.SourceBranch'], 'refs/heads/main')]
 
-  - name: 'SignType'
-    ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
-      value: 'real'
-    ${{ if ne(variables['Build.SourceBranch'], 'refs/heads/main') }}:
-      value: 'test'
+  - name: SignType
+    value: test
 
 parameters:
   - name: LogBugs
@@ -38,15 +31,13 @@ resources:
       ref: refs/tags/release
 
 extends:
-  template: azure-pipelines/MicroBuild.1ES.Official.yml@MicroBuildTemplate
+  template: azure-pipelines/MicroBuild.1ES.Unofficial.yml@MicroBuildTemplate
   parameters:
     pool:
       name: VSEngSS-MicroBuild2022-1ES
     sdl:
-      policheck:
-        enabled: true
+      enableAllTools: true
       binskim:
-        enabled: true
         scanOutputDirectoryOnly: true
       tsa:
         enable: ${{ parameters.LogBugs }}
@@ -55,4 +46,3 @@ extends:
 
     stages:
       - template: 'build.yml'
-      - template: 'publish.yml'
