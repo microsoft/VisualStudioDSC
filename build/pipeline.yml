@@ -24,6 +24,12 @@ variables:
     ${{ if ne(variables['Build.SourceBranch'], 'refs/heads/main') }}:
       value: 'test'
 
+parameters:
+  - name: LogBugs
+    displayName: Log bugs?
+    type: boolean
+    default: true
+
 resources:
   repositories:
     - repository: MicroBuildTemplate
