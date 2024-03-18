@@ -26,6 +26,10 @@ At least `VSConfigFile` or `Components` must be specified. You can also specify 
 `InstalledComponents`|NotConfigurable|StringArray[]|A collection of components installed in the Visual Studio instance identified by the provided Product ID and Channel ID.|N/A
 
 
+## Installation
+
+To use this resource provider, you must first install it as a PowerShell module. Installation instructions and options can be found on the PowerShell Gallery [here](https://www.powershellgallery.com/packages/Microsoft.VisualStudio.DSC).
+
 ## Contributing
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
