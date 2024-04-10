@@ -66,7 +66,15 @@ class VSComponents
                 throw "Provided Installation Configuration file does not exist at $($this.vsConfigFile)"
             }
 
-            $requestedComponents += Get-Content $this.vsConfigFile | Out-String | ConvertFrom-Json | Select-Object -ExpandProperty components
+            $vsConfigFileObj = Get-Content $this.vsConfigFile | Out-String | ConvertFrom-Json
+
+            # If the provided VS Config file has extensions, automatically fail the test
+            if($vsConfigFileObj.extensions.count -gt 0)
+            {
+                return $false
+            }
+
+            $requestedComponents += $vsConfigFileObj | Select-Object -ExpandProperty components
         }
 
         foreach ($component in $requestedComponents)
@@ -185,7 +193,7 @@ function Add-VsComponents
         [bool]$AllowUnsignedExtensions
     )
     
-    $installerArgs = "modify --productId $ProductId --channelId $ChannelId --quiet --norestart"
+    $installerArgs = "modify --productId $ProductId --channelId $ChannelId --quiet --norestart --activityId VisualStudioDSC-$((New-Guid).Guid)"
 
     if(-not $Components -and -not $VsConfigPath)
     {
