@@ -22,6 +22,7 @@ At least `VSConfigFile` or `Components` must be specified. You can also specify 
 `VSConfigFile`|Optional|String|Path to the [Installation Configuration (VSConfig) file](https://learn.microsoft.com/visualstudio/install/import-export-installation-configurations) you wish to update the provided instance with.|Valid file path to a .vsconfig file
 `IncludeRecommended`|Optional|Boolean|For the provided required components, also add recommended components into the specified instance|True/False
 `IncludeOptional`|Optional|Boolean|For the provided required components, also add optional components into the specified instance|True/False
+`AllowUnsignedExtensions`|Optional|Boolean|For the provided extensions, allow installing unsigned extensions into the specified instance|True/False
 `InstalledComponents`|NotConfigurable|StringArray[]|A collection of components installed in the Visual Studio instance identified by the provided Product ID and Channel ID.|N/A
 
 

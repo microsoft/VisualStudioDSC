@@ -27,6 +27,9 @@ class VSComponents
     [DscProperty()]
     [bool]$includeOptional = $false
 
+    [DscProperty()]
+    [bool]$allowUnsignedExtensions = $false
+
     [DscProperty(NotConfigurable)]
     [string[]]$installedComponents
 
@@ -41,6 +44,7 @@ class VSComponents
             vsConfigFile = $this.vsConfigFile
             includeRecommended = $this.includeRecommended
             includeOptional = $this.includeOptional
+            allowUnsignedExtensions = $this.allowUnsignedExtensions
             installedComponents = $this.installedComponents
         }
     }
@@ -62,7 +66,15 @@ class VSComponents
                 throw "Provided Installation Configuration file does not exist at $($this.vsConfigFile)"
             }
 
-            $requestedComponents += Get-Content $this.vsConfigFile | Out-String | ConvertFrom-Json | Select-Object -ExpandProperty components
+            $vsConfigFileObj = Get-Content $this.vsConfigFile | Out-String | ConvertFrom-Json
+
+            # If the provided VS Config file has extensions, automatically fail the test
+            if($vsConfigFileObj.extensions.count -gt 0)
+            {
+                return $false
+            }
+
+            $requestedComponents += $vsConfigFileObj | Select-Object -ExpandProperty components
         }
 
         foreach ($component in $requestedComponents)
@@ -83,7 +95,7 @@ class VSComponents
             return
         }
 
-        Add-VsComponents -ProductId $this.productId -ChannelId $this.channelId -VsConfigPath $this.vsConfigFile -Components $this.components -IncludeRecommended $this.includeRecommended -IncludeOptional $this.includeOptional
+        Add-VsComponents -ProductId $this.productId -ChannelId $this.channelId -VsConfigPath $this.vsConfigFile -Components $this.components -IncludeRecommended $this.includeRecommended -IncludeOptional $this.includeOptional -AllowUnsignedExtensions $this.allowUnsignedExtensions
     }
 }
 
@@ -140,6 +152,9 @@ function Get-VsComponents
 .PARAMETER IncludeOptional
     For the provided required components, also add optional components into the specified instance
 
+.PARAMETER AllowUnsignedExtensions
+    For the provided extensions, allow unsigned extensions to be installed into the specified instance
+    
 .LINK
     https://learn.microsoft.com/en-us/visualstudio/install/workload-and-component-ids
 
@@ -172,10 +187,13 @@ function Add-VsComponents
         [bool]$IncludeRecommended,
         
         [Parameter()]
-        [bool]$IncludeOptional
+        [bool]$IncludeOptional,
+        
+        [Parameter()]
+        [bool]$AllowUnsignedExtensions
     )
     
-    $installerArgs = "modify --productId $ProductId --channelId $ChannelId --quiet --norestart"
+    $installerArgs = "modify --productId $ProductId --channelId $ChannelId --quiet --norestart --activityId VisualStudioDSC-$((New-Guid).Guid)"
 
     if(-not $Components -and -not $VsConfigPath)
     {
@@ -206,6 +224,11 @@ function Add-VsComponents
     if($IncludeOptional)
     {
         $installerArgs += " --includeOptional"
+    }
+
+    if($AllowUnsignedExtensions)
+    {
+        $installerArgs += " --allowUnsignedExtensions"
     }
 
     Invoke-VsInstaller -Arguments $installerArgs
