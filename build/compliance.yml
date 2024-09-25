@@ -15,7 +15,7 @@ variables:
   - template: 'variables.yml'
 
   - name: SignType
-    value: test
+    value: real
 
 parameters:
   - name: LogBugs
