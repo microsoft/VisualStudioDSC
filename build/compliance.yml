@@ -58,6 +58,6 @@ extends:
             templateContext:
                 outputs:
                   - output: pipelineArtifact
-                    targetPath: '$(Build.ArtifactStagingDirectory)\dropModule'
+                    targetPath: '$(Build.ArtifactStagingDirectory)\VisualStudioDSC\dropModule'
                     displayName: 'Publish module artifact'
                     artifactName: dropModule
