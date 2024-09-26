@@ -47,11 +47,11 @@ extends:
         configFile: $(Build.SourcesDirectory)\.config\tsaoptions.json
         onboard: false # We already onboarded
 
-stages:
-  - stage: Compliance
-    jobs:
-      - job: Post_Build_Compliance_Check
-        displayName: Run compliance checks
-        steps:
-            - download: VisualStudioDSC
-              artifact: dropModule
+    stages:
+      - stage: Compliance
+        jobs:
+          - job: Post_Build_Compliance_Check
+            displayName: Run compliance checks
+            steps:
+                - download: VisualStudioDSC
+                  artifact: dropModule
