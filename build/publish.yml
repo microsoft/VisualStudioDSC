@@ -49,3 +49,4 @@ stages:
           tag: '$(Build.BuildNumber)'
           assets: '$(Build.ArtifactStagingDirectory)\*.nupkg'
           isPreRelease: $(isPublishPreRelease)
+
