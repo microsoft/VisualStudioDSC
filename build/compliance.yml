@@ -53,13 +53,11 @@ extends:
           - job: Post_Build_Compliance_Check
             displayName: Run compliance checks
             steps:
-            - task: DownloadPipelineArtifact@2
-              inputs:
-                artifact: dropModule
-                path: $(Build.ArtifactStagingDirectory)\VisualStudioDSC\dropModule
+                - download: VisualStudioDSC
+                  artifact: dropModule
             templateContext:
                 outputs:
                   - output: pipelineArtifact
-                    targetPath: '$(Build.ArtifactStagingDirectory)\VisualStudioDSC\dropModule'
+                    targetPath: '$(Pipeline.Workspace)\VisualStudioDSC\dropModule'
                     displayName: 'Publish module artifact'
                     artifactName: dropModule
