@@ -29,6 +29,9 @@ resources:
       type: git
       name: 1ESPipelineTemplates/MicroBuildTemplate
       ref: refs/tags/release
+  pipelines:
+    - pipeline: VisualStudioDSC
+      source: microsoft.VisualStudioDSC
 
 extends:
   template: azure-pipelines/MicroBuild.1ES.Unofficial.yml@MicroBuildTemplate
@@ -44,5 +47,11 @@ extends:
         configFile: $(Build.SourcesDirectory)\.config\tsaoptions.json
         onboard: false # We already onboarded
 
-    stages:
-      - template: 'build.yml'
+stages:
+  - stage: Compliance
+    jobs:
+      - job: Post_Build_Compliance_Check
+        displayName: Run compliance checks
+        steps:
+            - download: VisualStudioDSC
+              artifact: dropModule
