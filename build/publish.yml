@@ -35,10 +35,10 @@ stages:
           Publish-Module @publishModuleParams
         displayName: 'Upload module to PowerShell Gallery'
 
-      # - pwsh: |
-      #     iwr https://www.powershellgallery.com/api/v2/package/Microsoft.VisualStudio.DSC/$(Build.BuildNumber) -outfile $(Build.ArtifactStagingDirectory)\Microsoft.VisualStudio.DSC.$(Build.BuildNumber).nupkg
+      - pwsh: |
+          iwr https://www.powershellgallery.com/api/v2/package/Microsoft.VisualStudio.DSC/$(Build.BuildNumber) -outfile $(Build.ArtifactStagingDirectory)\Microsoft.VisualStudio.DSC.$(Build.BuildNumber).nupkg
           
-      #   displayName: 'Downloading published nupkg to artifact staging'
+        displayName: 'Downloading published nupkg to artifact staging'
 
       # - task: GitHubRelease@1
       #   displayName: 'Publish Release on GitHub'
