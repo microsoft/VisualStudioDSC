@@ -56,8 +56,8 @@ extends:
                 - download: VisualStudioDSC
                   artifact: dropModule
 
-        outputs:
-          - output: pipelineArtifact
-            targetPath: '$(Build.ArtifactStagingDirectory)\dropModule'
-            displayName: 'Publish module artifact'
-            artifactName: dropModule
+            outputs:
+              - output: pipelineArtifact
+                targetPath: '$(Build.ArtifactStagingDirectory)\dropModule'
+                displayName: 'Publish module artifact'
+                artifactName: dropModule
