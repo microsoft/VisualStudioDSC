@@ -1,7 +1,7 @@
 stages:
  - stage: 'Publish'
    dependsOn: 'Build'
-   condition: and(succeeded(), eq(variables.IsMainBranch, false))
+   condition: and(succeeded(), eq(variables.IsMainBranch, true))
    jobs:
     - job: 'Publish'
       displayName: 'Publish to Powershell Gallery'
@@ -27,7 +27,6 @@ stages:
               NuGetApiKey = "$(VSSetup-Powershell-API-Key)"
               Verbose = $true
               Force = $true
-              WhatIf = $true
           }
 
           Install-Module PowerShellGet -Force -AllowClobber
@@ -40,15 +39,13 @@ stages:
           
         displayName: 'Downloading published nupkg to artifact staging'
 
-      # - task: GitHubRelease@1
-      #   displayName: 'Publish Release on GitHub'
-      #   inputs:
-      #     gitHubConnection: 'GitHub-Preecington'
-      #     repositoryName: 'Microsoft/VisualStudioDSC'
-      #     target: '$(Build.SourceVersion)'
-      #     tagSource: userSpecifiedTag
-      #     tag: '$(Build.BuildNumber)'
-      #     assets: '$(Build.ArtifactStagingDirectory)\*.nupkg'
-      #     isPreRelease: $(isPublishPreRelease)
-
-
+      - task: GitHubRelease@1
+        displayName: 'Publish Release on GitHub'
+        inputs:
+          gitHubConnection: 'GitHub-Preecington'
+          repositoryName: 'Microsoft/VisualStudioDSC'
+          target: '$(Build.SourceVersion)'
+          tagSource: userSpecifiedTag
+          tag: '$(Build.BuildNumber)'
+          assets: '$(Build.ArtifactStagingDirectory)\*.nupkg'
+          isPreRelease: $(isPublishPreRelease)
