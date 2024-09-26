@@ -54,7 +54,7 @@ extends:
             displayName: Run compliance checks
             steps:
             - task: DownloadPipelineArtifact@2
-            inputs:
+              inputs:
                 artifact: dropModule
                 path: $(Build.ArtifactStagingDirectory)\VisualStudioDSC\dropModule
             templateContext:
