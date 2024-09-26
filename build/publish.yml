@@ -1,7 +1,7 @@
 stages:
  - stage: 'Publish'
    dependsOn: 'Build'
-   condition: and(succeeded(), eq(variables.IsMainBranch, true))
+   condition: and(succeeded(), eq(variables.IsMainBranch, false))
    jobs:
     - job: 'Publish'
       displayName: 'Publish to Powershell Gallery'
@@ -27,6 +27,7 @@ stages:
               NuGetApiKey = "$(VSSetup-Powershell-API-Key)"
               Verbose = $true
               Force = $true
+              WhatIf = $true
           }
 
           Install-Module PowerShellGet -Force -AllowClobber
@@ -34,20 +35,20 @@ stages:
           Publish-Module @publishModuleParams
         displayName: 'Upload module to PowerShell Gallery'
 
-      - pwsh: |
-          iwr https://www.powershellgallery.com/api/v2/package/Microsoft.VisualStudio.DSC/$(Build.BuildNumber) -outfile $(Build.ArtifactStagingDirectory)\Microsoft.VisualStudio.DSC.$(Build.BuildNumber).nupkg
+      # - pwsh: |
+      #     iwr https://www.powershellgallery.com/api/v2/package/Microsoft.VisualStudio.DSC/$(Build.BuildNumber) -outfile $(Build.ArtifactStagingDirectory)\Microsoft.VisualStudio.DSC.$(Build.BuildNumber).nupkg
           
-        displayName: 'Downloading published nupkg to artifact staging'
+      #   displayName: 'Downloading published nupkg to artifact staging'
 
-      - task: GitHubRelease@1
-        displayName: 'Publish Release on GitHub'
-        inputs:
-          gitHubConnection: 'GitHub-Preecington'
-          repositoryName: 'Microsoft/VisualStudioDSC'
-          target: '$(Build.SourceVersion)'
-          tagSource: userSpecifiedTag
-          tag: '$(Build.BuildNumber)'
-          assets: '$(Build.ArtifactStagingDirectory)\*.nupkg'
-          isPreRelease: $(isPublishPreRelease)
+      # - task: GitHubRelease@1
+      #   displayName: 'Publish Release on GitHub'
+      #   inputs:
+      #     gitHubConnection: 'GitHub-Preecington'
+      #     repositoryName: 'Microsoft/VisualStudioDSC'
+      #     target: '$(Build.SourceVersion)'
+      #     tagSource: userSpecifiedTag
+      #     tag: '$(Build.BuildNumber)'
+      #     assets: '$(Build.ArtifactStagingDirectory)\*.nupkg'
+      #     isPreRelease: $(isPublishPreRelease)
 
 
