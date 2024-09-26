@@ -29,6 +29,8 @@ stages:
               Force = $true
           }
 
+          Install-Module PowerShellGet -Force -AllowClobber
+ 
           Publish-Module @publishModuleParams
         displayName: 'Upload module to PowerShell Gallery'
 
