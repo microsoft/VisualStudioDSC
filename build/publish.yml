@@ -16,12 +16,6 @@ stages:
       - download: current
         artifact: dropModule
 
-      - task: UseDotNet@2
-        displayName: Use .NET 8.0.200 SDK
-        inputs:
-            packageType: 'sdk'
-            version: '8.0.200'
-
       - pwsh: |
           $isPreRelease = -not [string]::IsNullOrEmpty((Test-ModuleManifest -Path $(Pipeline.Workspace)\dropModule\Microsoft.VisualStudio.DSC\Microsoft.VisualStudio.DSC.psd1).PrivateData.PSData.Prerelease)
           Write-Host "##vso[task.setvariable variable=isPublishPreRelease;]$isPreRelease"
