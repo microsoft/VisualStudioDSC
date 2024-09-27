@@ -35,6 +35,8 @@ stages:
               Debug = $true
           }
  
+          Install-Module -Name Microsoft.PowerShell.PSResourceGet
+
           Publish-PsResource @publishModuleParams
         displayName: 'Upload module to PowerShell Gallery'
 
