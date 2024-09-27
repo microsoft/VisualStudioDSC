@@ -30,12 +30,12 @@ stages:
       - pwsh: |
           $publishModuleParams = @{
               Path = "$(Pipeline.Workspace)\dropModule\Microsoft.VisualStudio.DSC"
-              NuGetApiKey = "$(VSSetup-Powershell-API-Key)"
+              NuGetApiKey = "Test-API-Key"
               Verbose = $true
-              Force = $true
+              Debug = $true
           }
  
-          Publish-Module @publishModuleParams
+          Publish-PsResource @publishModuleParams
         displayName: 'Upload module to PowerShell Gallery'
 
       # - pwsh: |
