@@ -1,7 +1,7 @@
 stages:
  - stage: 'Publish'
    dependsOn: 'Build'
-   condition: and(succeeded(), eq(variables.IsMainBranch, true))
+   condition: and(succeeded(), eq(variables.IsMainBranch, false))
    jobs:
     - job: 'Publish'
       displayName: 'Publish to Powershell Gallery'
