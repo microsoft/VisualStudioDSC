@@ -16,6 +16,12 @@ stages:
       - download: current
         artifact: dropModule
 
+      - task: UseDotNet@2
+        displayName: Use .NET 8.0.200 SDK
+        inputs:
+            packageType: 'sdk'
+            version: '8.0.200'
+
       - pwsh: |
           $isPreRelease = -not [string]::IsNullOrEmpty((Test-ModuleManifest -Path $(Pipeline.Workspace)\dropModule\Microsoft.VisualStudio.DSC\Microsoft.VisualStudio.DSC.psd1).PrivateData.PSData.Prerelease)
           Write-Host "##vso[task.setvariable variable=isPublishPreRelease;]$isPreRelease"
@@ -28,25 +34,23 @@ stages:
               Verbose = $true
               Force = $true
           }
-
-          Install-Module PowerShellGet -Force -AllowClobber
  
           Publish-Module @publishModuleParams
         displayName: 'Upload module to PowerShell Gallery'
 
-      - pwsh: |
-          iwr https://www.powershellgallery.com/api/v2/package/Microsoft.VisualStudio.DSC/$(Build.BuildNumber) -outfile $(Build.ArtifactStagingDirectory)\Microsoft.VisualStudio.DSC.$(Build.BuildNumber).nupkg
+      # - pwsh: |
+      #     iwr https://www.powershellgallery.com/api/v2/package/Microsoft.VisualStudio.DSC/$(Build.BuildNumber) -outfile $(Build.ArtifactStagingDirectory)\Microsoft.VisualStudio.DSC.$(Build.BuildNumber).nupkg
           
-        displayName: 'Downloading published nupkg to artifact staging'
+      #   displayName: 'Downloading published nupkg to artifact staging'
 
-      - task: GitHubRelease@1
-        displayName: 'Publish Release on GitHub'
-        inputs:
-          gitHubConnection: 'GitHub-Preecington'
-          repositoryName: 'Microsoft/VisualStudioDSC'
-          target: '$(Build.SourceVersion)'
-          tagSource: userSpecifiedTag
-          tag: '$(Build.BuildNumber)'
-          assets: '$(Build.ArtifactStagingDirectory)\*.nupkg'
-          isPreRelease: $(isPublishPreRelease)
+      # - task: GitHubRelease@1
+      #   displayName: 'Publish Release on GitHub'
+      #   inputs:
+      #     gitHubConnection: 'GitHub-Preecington'
+      #     repositoryName: 'Microsoft/VisualStudioDSC'
+      #     target: '$(Build.SourceVersion)'
+      #     tagSource: userSpecifiedTag
+      #     tag: '$(Build.BuildNumber)'
+      #     assets: '$(Build.ArtifactStagingDirectory)\*.nupkg'
+      #     isPreRelease: $(isPublishPreRelease)
 
