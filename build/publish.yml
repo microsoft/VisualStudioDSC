@@ -27,6 +27,7 @@ stages:
               ApiKey = "Test-API-Key"
               Verbose = $true
               Debug = $true
+              Confirm = $false
           }
  
           Install-Module -Name Microsoft.PowerShell.PSResourceGet -Repository PSGallery -Force
