@@ -10,6 +10,8 @@ stages:
             enabled: true
             signType: $(SignType)
             zipSources: false
+            ${{ if eq(variables['SignType'], 'real') }}:
+              signWithProd: true
 
         outputs:
           - output: pipelineArtifact
