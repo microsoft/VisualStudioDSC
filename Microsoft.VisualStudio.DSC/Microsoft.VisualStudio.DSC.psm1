@@ -126,7 +126,7 @@ function Get-VsComponents
         [string]$ChannelId
     )
 
-    $result = Invoke-VsWhere -Arguments "-products $ProductId -include packages -format json -all -prerelease" | ConvertFrom-Json | Where-Object { $_.channelId -eq $ChannelId }
+    $result = Invoke-VsWhere -Arguments '-products', $ProductId, '-include', 'packages', '-format', 'json', '-all', '-prerelease' | ConvertFrom-Json | Where-Object { $_.channelId -eq $ChannelId }
     return $result.packages | Where-Object { $_.type -eq "Component" -or $_.type -eq "Workload" } | Select-Object -ExpandProperty id 
 }
 
@@ -336,15 +336,15 @@ function Invoke-VsInstaller
 #>
 function Invoke-VsWhere
 {
-    param
-    (
-        [Parameter(Mandatory)]
-        [string]$Arguments
-    )
+     param
+     (
+         [Parameter(Mandatory)]
+         [string[]]$Arguments
+     )
+ 
+     Assert-VsWherePresent
 
-    Assert-VsWherePresent
-
-    return Invoke-Expression -Command "&'$(Get-VsWherePath)' $Arguments"
+     return & (Get-VsWherePath) @Arguments
 }
 
 <#
