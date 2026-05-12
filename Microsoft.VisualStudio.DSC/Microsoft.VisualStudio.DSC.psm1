@@ -336,15 +336,15 @@ function Invoke-VsInstaller
 #>
 function Invoke-VsWhere
 {
-     param
-     (
-         [Parameter(Mandatory)]
-         [string[]]$Arguments
-     )
+    param
+    (
+        [Parameter(Mandatory)]
+        [string[]]$Arguments
+    )
  
-     Assert-VsWherePresent
+    Assert-VsWherePresent
 
-     return & (Get-VsWherePath) @Arguments
+    return & (Get-VsWherePath) @Arguments
 }
 
 <#
