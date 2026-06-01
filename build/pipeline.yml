@@ -52,4 +52,6 @@ extends:
 
     stages:
       - template: 'build.yml'
+        parameters:
+          SignType: 'real'
       - template: 'publish.yml'
