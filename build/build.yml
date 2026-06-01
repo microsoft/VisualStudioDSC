@@ -1,3 +1,8 @@
+parameters:
+ - name: SignType
+   type: string
+   default: 'test'
+
 stages:
  - stage: 'Build'
    jobs:
@@ -8,9 +13,10 @@ stages:
         mb:
           signing:
             enabled: true
-            signType: $(SignType)
+            signType: ${{ parameters.SignType }}
             zipSources: false
-            signWithProd: true
+            ${{ if eq(parameters.SignType, 'real') }}:
+              signWithProd: true
 
         outputs:
           - output: pipelineArtifact
