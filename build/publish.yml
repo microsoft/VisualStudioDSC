@@ -5,6 +5,10 @@ stages:
    jobs:
     - job: 'Publish'
       displayName: 'Publish to Powershell Gallery'
+      templateContext:
+        type: releaseJob 
+        isProduction: true
+    
       pool: '$(MicroBuildPool)'
 
       variables:
