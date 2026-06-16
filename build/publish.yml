@@ -8,6 +8,10 @@ stages:
       templateContext:
         type: releaseJob 
         isProduction: true
+        inputs:
+          - input: pipelineArtifact
+            artifactName: dropModule
+            targetPath: $(Pipeline.Workspace)/dropModule
     
       pool: '$(MicroBuildPool)'
 
@@ -16,9 +20,6 @@ stages:
 
       steps:
       - checkout: none  
-
-      - download: current
-        artifact: dropModule
 
       - pwsh: |
           $isPreRelease = -not [string]::IsNullOrEmpty((Test-ModuleManifest -Path $(Pipeline.Workspace)\dropModule\Microsoft.VisualStudio.DSC\Microsoft.VisualStudio.DSC.psd1).PrivateData.PSData.Prerelease)
