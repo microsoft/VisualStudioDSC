@@ -22,27 +22,73 @@ stages:
       - checkout: none  
 
       - pwsh: |
-          $isPreRelease = -not [string]::IsNullOrEmpty((Test-ModuleManifest -Path $(Pipeline.Workspace)\dropModule\Microsoft.VisualStudio.DSC\Microsoft.VisualStudio.DSC.psd1).PrivateData.PSData.Prerelease)
+          $ErrorActionPreference = 'Stop'
+
+          $manifest = Test-ModuleManifest -Path "$(Pipeline.Workspace)\dropModule\Microsoft.VisualStudio.DSC\Microsoft.VisualStudio.DSC.psd1"
+
+          $prerelease = $manifest.PrivateData.PSData.Prerelease
+          $isPreRelease = -not [string]::IsNullOrEmpty($prerelease)
+
+          $publishVersion = $manifest.Version.ToString()
+          if ($isPreRelease) {
+              $publishVersion = "$publishVersion-$prerelease"
+          }
+
+          Write-Host "Module version to publish: $publishVersion (pre-release: $isPreRelease)"
           Write-Host "##vso[task.setvariable variable=isPublishPreRelease;]$isPreRelease"
-        displayName: 'Determining if module is Pre Release'
+          Write-Host "##vso[task.setvariable variable=publishVersion;]$publishVersion"
+        displayName: 'Determining module version and Pre Release state'
 
       - pwsh: |
-          $publishModuleParams = @{
-              Path = "$(Pipeline.Workspace)\dropModule\Microsoft.VisualStudio.DSC"
-              ApiKey = "$(VSSetup-Powershell-API-Key)"
-              Verbose = $true
-              Confirm = $false
+          $ErrorActionPreference = 'Stop'
+
+          Install-Module -Name Microsoft.PowerShell.PSResourceGet -RequiredVersion '$(PSResourceGetVersion)' -Repository PSGallery -Force
+
+          # Publish-PSResource reads the repository store while binding parameters, which throws on a
+          # fresh agent where the store has never been created. Touching it first creates the default.
+          # See https://github.com/PowerShell/PSResourceGet/issues/1806
+          Get-PSResourceRepository | Out-Null
+
+          # Gallery packages are immutable, so re-running this stage after the upload already landed
+          # fails the whole release with a 409. Only the OData entity endpoint reports this honestly -
+          # the /package/{id}/{version} route answers 200 for versions that don't exist.
+          $versionUri = "https://www.powershellgallery.com/api/v2/Packages(Id='Microsoft.VisualStudio.DSC',Version='$(publishVersion)')"
+          $existing = Invoke-WebRequest -Uri $versionUri -SkipHttpErrorCheck -ErrorAction SilentlyContinue
+
+          if ($existing.StatusCode -eq 200) {
+              Write-Host "##vso[task.logissue type=warning]$(publishVersion) is already on the PowerShell Gallery, skipping upload so the rest of the release can finish."
           }
- 
-          Install-Module -Name Microsoft.PowerShell.PSResourceGet -Repository PSGallery -Force
+          else {
+              $publishModuleParams = @{
+                  Path       = "$(Pipeline.Workspace)\dropModule\Microsoft.VisualStudio.DSC"
+                  Repository = 'PSGallery'
+                  ApiKey     = "$(VSSetup-Powershell-API-Key)"
+                  Verbose    = $true
+                  Confirm    = $false
+              }
 
-          Publish-PsResource @publishModuleParams
-
+              Publish-PSResource @publishModuleParams
+          }
         displayName: 'Upload module to PowerShell Gallery'
 
       - pwsh: |
-          iwr https://www.powershellgallery.com/api/v2/package/Microsoft.VisualStudio.DSC/$(Build.BuildNumber) -outfile $(Build.ArtifactStagingDirectory)\Microsoft.VisualStudio.DSC.$(Build.BuildNumber).nupkg
-          
+          $ErrorActionPreference = 'Stop'
+
+          $nupkgPath = "$(Build.ArtifactStagingDirectory)\Microsoft.VisualStudio.DSC.$(publishVersion).nupkg"
+
+          $download = Invoke-WebRequest `
+              -Uri "https://www.powershellgallery.com/api/v2/package/Microsoft.VisualStudio.DSC/$(publishVersion)" `
+              -OutFile $nupkgPath `
+              -PassThru
+
+          # That route redirects to the latest package when the requested version isn't on the CDN yet,
+          # so without this the GitHub release can end up carrying the previous version's nupkg.
+          $resolved = $download.BaseResponse.RequestMessage.RequestUri.AbsoluteUri
+          $expected = "microsoft.visualstudio.dsc.$(publishVersion).nupkg"
+
+          if (-not $resolved.EndsWith($expected, [System.StringComparison]::OrdinalIgnoreCase)) {
+              throw "Expected to download '$expected' but the gallery served '$resolved'."
+          }
         displayName: 'Downloading published nupkg to artifact staging'
 
       - task: GitHubRelease@1
