@@ -13,3 +13,8 @@ variables:
 
   - name: 'ModuleBuildFolder'
     value: '$(ModuleFolder)\build'
+
+  # Pinned so a bad PSGallery release can't take the pipeline down the way 1.1.1 did.
+  # See https://github.com/PowerShell/PSResourceGet/issues/1806
+  - name: 'PSResourceGetVersion'
+    value: '1.2.0'
