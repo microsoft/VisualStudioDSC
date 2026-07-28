@@ -96,9 +96,15 @@ stages:
         inputs:
           gitHubConnection: 'GitHub-Preecington'
           repositoryName: 'Microsoft/VisualStudioDSC'
+          # 'edit' updates the release when the tag already has one and falls back to creating it
+          # when it doesn't. 'create' throws a 422 for a tag that has already been released, which
+          # would strand a re-run on the last step even once the Gallery steps are re-runnable.
+          action: edit
           target: '$(Build.SourceVersion)'
-          tagSource: userSpecifiedTag
           tag: '$(Build.BuildNumber)'
           assets: '$(Build.ArtifactStagingDirectory)\*.nupkg'
+          # Drop the existing assets before uploading so the release always carries the nupkg
+          # produced by the run that last touched it.
+          assetUploadMode: delete
           isPreRelease: $(isPublishPreRelease)
 
