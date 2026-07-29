@@ -28,8 +28,11 @@ stages:
         - checkout: self
           fetchDepth: 0
 
+        # Must come before anything that pulls a package so the internal feed is authenticated.
+        - task: NuGetAuthenticate@1
+
         - pwsh: |
-            dotnet tool install nbgv --tool-path "."
+            dotnet tool install nbgv --tool-path "." --configfile "$(Build.SourcesDirectory)\nuget.config"
           displayName: 'Install Nerdbank GitVersioning (nbgv)'
 
         - pwsh: |
@@ -75,12 +78,10 @@ stages:
             Test-FileCatalog @testFileCatalogParams
           displayName: 'Create and test catalog file'
 
-        - task: NuGetAuthenticate@1
-
         - task: MSBuild@1
           inputs:
             solution: '$(ModuleBuildFolder)\SignModule.signproj'
-            msbuildArguments: '/r /p:ModuleFolder="$(ModuleSourceFolder)"'
+            msbuildArguments: '/r /p:ModuleFolder="$(ModuleSourceFolder)" /p:RestoreConfigFile="$(Build.SourcesDirectory)\nuget.config"'
 
         - task: MicroBuildCodesignVerify@3
           inputs:

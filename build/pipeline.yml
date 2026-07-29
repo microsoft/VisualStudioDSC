@@ -37,6 +37,12 @@ resources:
 extends:
   template: azure-pipelines/MicroBuild.1ES.Official.yml@MicroBuildTemplate
   parameters:
+    settings:
+      # CFSClean2 is deliberately omitted. It blocks the PowerShell Gallery, and the Publish stage
+      # has to reach it to ship the module. 1ES guidance for that case is to request an S360
+      # exception of type 'Dispute' rather than allow-list the endpoint.
+      # See https://aka.ms/1es/netiso/CFS
+      networkIsolationPolicy: Permissive,CFSClean
     pool:
       name: VSEngSS-MicroBuild2022-1ES
     sdl:

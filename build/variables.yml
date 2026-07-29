@@ -18,3 +18,11 @@ variables:
   # See https://github.com/PowerShell/PSResourceGet/issues/1806
   - name: 'PSResourceGetVersion'
     value: '1.2.0'
+
+  # Org-scoped Azure Artifacts feed backing all package acquisition. The v3 URL lives in
+  # nuget.config at the repo root; PowerShellGet needs the v2 endpoint instead.
+  - name: 'InternalFeedName'
+    value: 'Setup-Dependencies'
+
+  - name: 'InternalFeedV2Uri'
+    value: 'https://pkgs.dev.azure.com/devdiv/_packaging/Setup-Dependencies/nuget/v2'

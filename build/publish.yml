@@ -39,15 +39,77 @@ stages:
           Write-Host "##vso[task.setvariable variable=publishVersion;]$publishVersion"
         displayName: 'Determining module version and Pre Release state'
 
+      # PSResourceGet is the module we need, so the bootstrap has to use in-box PowerShellGet.
+      # Pattern is 1ES SFI guidance: https://aka.ms/1es/netiso/CFS
+      - task: NuGetAuthenticate@1
+        displayName: 'Authenticate to Azure Artifacts'
+
       - pwsh: |
           $ErrorActionPreference = 'Stop'
 
-          Install-Module -Name Microsoft.PowerShell.PSResourceGet -RequiredVersion '$(PSResourceGetVersion)' -Repository PSGallery -Force
+          Write-Host 'PSResourceGet already present on the image:'
+          Get-Module -ListAvailable Microsoft.PowerShell.PSResourceGet | Select-Object Name, Version | Format-Table
+
+          $token = $env:SYSTEM_ACCESSTOKEN | ConvertTo-SecureString -AsPlainText -Force
+          $credential = [pscredential]::new('username', $token)
+
+          Register-PSRepository -Name '$(InternalFeedName)' `
+              -SourceLocation '$(InternalFeedV2Uri)' `
+              -InstallationPolicy Trusted `
+              -Credential $credential
+
+          Get-PSRepository
+
+          Install-Module -Name Microsoft.PowerShell.PSResourceGet -RequiredVersion '$(PSResourceGetVersion)' `
+              -Repository '$(InternalFeedName)' -Credential $credential -Force
+
+          Get-Module -ListAvailable Microsoft.PowerShell.PSResourceGet | Select-Object Name, Version | Format-Table
+        displayName: 'Install PSResourceGet from the internal feed'
+        env:
+          SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+      - pwsh: |
+          $ErrorActionPreference = 'Stop'
+
+          Import-Module Microsoft.PowerShell.PSResourceGet -RequiredVersion '$(PSResourceGetVersion)'
 
           # Publish-PSResource reads the repository store while binding parameters, which throws on a
           # fresh agent where the store has never been created. Touching it first creates the default.
           # See https://github.com/PowerShell/PSResourceGet/issues/1806
           Get-PSResourceRepository | Out-Null
+
+          # Pack locally rather than letting the upload do it, so the same file we ship to the Gallery
+          # is the one attached to the GitHub release. Saves downloading it back off the Gallery CDN,
+          # which is the only dependency-shaped Gallery access this pipeline had.
+          $stagingPath = "$(Build.ArtifactStagingDirectory)"
+          New-Item -Path $stagingPath -ItemType Directory -Force | Out-Null
+
+          Register-PSResourceRepository -Name 'LocalOutput' -Uri $stagingPath -Trusted -Force
+
+          Publish-PSResource `
+              -Path "$(Pipeline.Workspace)\dropModule\Microsoft.VisualStudio.DSC" `
+              -Repository 'LocalOutput' `
+              -Verbose `
+              -Confirm:$false
+
+          # Publish-PSResource names the package after the manifest, so this is the exact file the
+          # version step resolved. Asserting on the name catches a manifest/version mismatch here
+          # rather than after it has already gone to the Gallery.
+          $nupkgPath = Join-Path $stagingPath "Microsoft.VisualStudio.DSC.$(publishVersion).nupkg"
+
+          if (-not (Test-Path -Path $nupkgPath)) {
+              $found = (Get-ChildItem -Path $stagingPath -Filter '*.nupkg' -File).Name -join ', '
+              throw "Expected Publish-PSResource to produce '$nupkgPath' but it is not there. Found: $found"
+          }
+
+          Write-Host "Packed $nupkgPath"
+          Write-Host "##vso[task.setvariable variable=nupkgPath;]$nupkgPath"
+        displayName: 'Packing module into a nupkg'
+
+      - pwsh: |
+          $ErrorActionPreference = 'Stop'
+
+          Import-Module Microsoft.PowerShell.PSResourceGet -RequiredVersion '$(PSResourceGetVersion)'
 
           # Gallery packages are immutable, so re-running this stage after the upload already landed
           # fails the whole release with a 409. Only the OData entity endpoint reports this honestly -
@@ -59,37 +121,14 @@ stages:
               Write-Host "##vso[task.logissue type=warning]$(publishVersion) is already on the PowerShell Gallery, skipping upload so the rest of the release can finish."
           }
           else {
-              $publishModuleParams = @{
-                  Path       = "$(Pipeline.Workspace)\dropModule\Microsoft.VisualStudio.DSC"
-                  Repository = 'PSGallery'
-                  ApiKey     = "$(VSSetup-Powershell-API-Key)"
-                  Verbose    = $true
-                  Confirm    = $false
-              }
-
-              Publish-PSResource @publishModuleParams
+              Publish-PSResource `
+                  -NupkgPath "$(nupkgPath)" `
+                  -Repository 'PSGallery' `
+                  -ApiKey "$(VSSetup-Powershell-API-Key)" `
+                  -Verbose `
+                  -Confirm:$false
           }
         displayName: 'Upload module to PowerShell Gallery'
-
-      - pwsh: |
-          $ErrorActionPreference = 'Stop'
-
-          $nupkgPath = "$(Build.ArtifactStagingDirectory)\Microsoft.VisualStudio.DSC.$(publishVersion).nupkg"
-
-          $download = Invoke-WebRequest `
-              -Uri "https://www.powershellgallery.com/api/v2/package/Microsoft.VisualStudio.DSC/$(publishVersion)" `
-              -OutFile $nupkgPath `
-              -PassThru
-
-          # That route redirects to the latest package when the requested version isn't on the CDN yet,
-          # so without this the GitHub release can end up carrying the previous version's nupkg.
-          $resolved = $download.BaseResponse.RequestMessage.RequestUri.AbsoluteUri
-          $expected = "microsoft.visualstudio.dsc.$(publishVersion).nupkg"
-
-          if (-not $resolved.EndsWith($expected, [System.StringComparison]::OrdinalIgnoreCase)) {
-              throw "Expected to download '$expected' but the gallery served '$resolved'."
-          }
-        displayName: 'Downloading published nupkg to artifact staging'
 
       - task: GitHubRelease@1
         displayName: 'Publish Release on GitHub'

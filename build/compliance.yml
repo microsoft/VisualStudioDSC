@@ -36,6 +36,10 @@ resources:
 extends:
   template: azure-pipelines/MicroBuild.1ES.Unofficial.yml@MicroBuildTemplate
   parameters:
+    settings:
+      # This pipeline only downloads a pipeline artifact and runs SDL tools, so it can take the
+      # full policy. CFSClean2 is what blocks the PowerShell Gallery. See https://aka.ms/1es/netiso/CFS
+      networkIsolationPolicy: Permissive,CFSClean,CFSClean2
     pool:
       name: VSEngSS-MicroBuild2022-1ES
     sdl:
