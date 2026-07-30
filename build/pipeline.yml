@@ -37,6 +37,9 @@ resources:
 extends:
   template: azure-pipelines/MicroBuild.1ES.Official.yml@MicroBuildTemplate
   parameters:
+    settings:
+      # Check the internal build docs before changing this value.
+      networkIsolationPolicy: Permissive,CFSClean,CFSClean3
     pool:
       name: VSEngSS-MicroBuild2022-1ES
     sdl:

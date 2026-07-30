@@ -28,6 +28,9 @@ stages:
         - checkout: self
           fetchDepth: 0
 
+        # Must run before any package pull.
+        - task: NuGetAuthenticate@1
+
         - pwsh: |
             dotnet tool install nbgv --tool-path "."
           displayName: 'Install Nerdbank GitVersioning (nbgv)'
@@ -74,8 +77,6 @@ stages:
             }
             Test-FileCatalog @testFileCatalogParams
           displayName: 'Create and test catalog file'
-
-        - task: NuGetAuthenticate@1
 
         - task: MSBuild@1
           inputs:
