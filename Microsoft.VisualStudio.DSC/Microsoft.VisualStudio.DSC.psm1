@@ -97,6 +97,29 @@ class VSComponents
 
         Add-VsComponents -ProductId $this.productId -ChannelId $this.channelId -VsConfigPath $this.vsConfigFile -Components $this.components -IncludeRecommended $this.includeRecommended -IncludeOptional $this.includeOptional -AllowUnsignedExtensions $this.allowUnsignedExtensions
     }
+
+    [VSComponents[]] Export()
+    {
+        $c = $this.Get().components
+        
+        $results = [VSComponents[]]::new($c.length)
+        for ($i = 0; $i -lt $c.length; $i++)
+        {
+            $results[$i] = 
+                @{
+                    productId = $this.productId
+                    channelId = $this.channelId
+                    components = $c[$i]
+                    vsConfigFile = $this.vsConfigFile
+                    includeRecommended = $this.includeRecommended
+                    includeOptional = $this.includeOptional
+                    allowUnsignedExtensions = $this.allowUnsignedExtensions
+                    installedComponents = $c[$i]
+                }
+        }
+
+        return $results
+    }
 }
 
 <#

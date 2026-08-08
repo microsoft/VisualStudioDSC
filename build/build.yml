@@ -93,6 +93,8 @@ stages:
           inputs:
             contents: $(ModuleSourceFolder)\**
             targetFolder: '$(Build.ArtifactStagingDirectory)\dropModule'
+          
+        # TODO: execute Pester tests
 
         - task: MicroBuildCleanup@1
           env:
