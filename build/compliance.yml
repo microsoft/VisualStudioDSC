@@ -39,7 +39,7 @@ extends:
     settings:
       networkIsolationPolicy: CFSClean,CFSClean2,CFSClean3
     pool:
-      name: VSEngSS-MicroBuild2022-1ES
+      name: VSEng-MicroBuildVSStable
     sdl:
       enableAllTools: true
       binskim:
