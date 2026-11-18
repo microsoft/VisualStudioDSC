@@ -41,7 +41,7 @@ extends:
       # Check the internal build docs before changing this value.
       networkIsolationPolicy: Permissive,CFSClean,CFSClean3
     pool:
-      name: VSEngSS-MicroBuild2022-1ES
+      name: VSEng-MicroBuildVSStable
     sdl:
       policheck:
         enabled: true
