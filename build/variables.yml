@@ -3,7 +3,7 @@ variables:
     value: 'VSSetup'
 
   - name: 'MicroBuildPool'
-    value: 'VSEngSS-MicroBuild2022-1ES'
+    value: 'VSEng-MicroBuildVSStable'
 
   - name: 'ModuleFolder'
     value: '$(Build.SourcesDirectory)'
